@@ -1,0 +1,88 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-zgr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zgrpass}
+      POSTGRES_DB: ${POSTGRES_DB:-zgrwise}
+    ports: ["5432:5432"]
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./tools/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zgr} -d ${POSTGRES_DB:-zgrwise}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7
+    ports: ["6380:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./apps/api
+    environment:
+      DATABASE_URL: postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_BASE: http://ollama:11434
+      EMB_MODEL: ${EMB_MODEL:-bge-small-en-v1.5}
+      EMB_DIM: ${EMB_DIM:-384}
+      OBSIDIAN_EXPORT_PATH: /data/exports
+      API_KEY: ${API_KEY:-devkey}
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      ollama: { condition: service_healthy }
+    ports: ["8000:8000"]
+    volumes:
+      - ./apps/api:/app
+      - ./data/exports:/data/exports
+
+  worker:
+    build: ./apps/worker
+    environment:
+      DATABASE_URL: postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB
+      REDIS_PASSWORD: $POSTGRES_PASSWORD
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_BASE: http://ollama:11434
+      EMB_MODEL: ${EMB_MODEL:-bge-small-en-v1.5}
+      EMB_DIM: ${EMB_DIM:-384}
+      OBSIDIAN_EXPORT_PATH: /data/exports
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      ollama: { condition: service_healthy }
+    volumes:
+      - ./apps/worker:/worker
+      - ./data/exports:/data/exports
+
+  web:
+    build: ./apps/web
+    environment:
+      NEXT_PUBLIC_API_BASE: http://localhost:8000
+    depends_on:
+      api: { condition: service_started }
+    ports: ["3000:3000"]
+    volumes:
+      - ./apps/web:/app
+
+volumes:
+  db_data:
+  ollama_data: 

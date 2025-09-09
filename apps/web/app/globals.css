@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* daha yumuşak scroll ve scrollbar */
+html, body { scroll-behavior: smooth; }
+
+/* shadcn scrollbar (paketi eklediysen) */
+:root {
+  --radius: 0.75rem; /* kart köşelerini yumuşat */
+}
+
+/* feed odaklı küçük iyileştirmeler */
+.card:hover { transform: translateY(-1px); }
+
+@layer base {
+  html {
+    font-family: system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+} 

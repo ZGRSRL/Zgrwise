@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "zgrwise-api"
+version = "0.1.0"
+description = "ZgrWise Knowledge Management API"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+sqlalchemy = "^2.0.23"
+alembic = "^1.12.1"
+psycopg = {extras = ["binary"], version = "^3.1.13"}
+redis = "^5.0.1"
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+python-multipart = "^0.0.6"
+requests = "^2.31.0"
+# sentence-transformers = "^2.2.2"  # ML kütüphanesi - gereksiz
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-asyncio = "^0.21.1"
+black = "^23.11.0"
+ruff = "^0.1.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88 
