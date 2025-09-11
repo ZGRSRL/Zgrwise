@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from .db import engine, Base
-from .routes import health, highlights, search, review, ai, rss, ai_review, sources
+from .routes import health, highlights, search, review, ai, rss, ai_review, sources, rss_native, export
 from .config import settings
 
 # Create database tables
@@ -16,7 +16,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,8 +35,10 @@ app.include_router(search.router, prefix="/api", tags=["search"], dependencies=[
 app.include_router(review.router, prefix="/api", tags=["review"], dependencies=[Depends(verify_api_key)])
 app.include_router(ai.router, prefix="/api", tags=["ai"], dependencies=[Depends(verify_api_key)])
 app.include_router(rss.router, prefix="/api", tags=["rss"], dependencies=[Depends(verify_api_key)])
+app.include_router(rss_native.router, tags=["rss-native"])  # No API key required for native RSS
 app.include_router(ai_review.router, prefix="/api", tags=["ai-review"], dependencies=[Depends(verify_api_key)])
 app.include_router(sources.router, prefix="/api", tags=["sources"], dependencies=[Depends(verify_api_key)])
+app.include_router(export.router, tags=["export"], dependencies=[Depends(verify_api_key)])
 
 @app.get("/")
 async def root():

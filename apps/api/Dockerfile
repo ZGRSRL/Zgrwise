@@ -1,23 +1,26 @@
 FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    g++ \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
 RUN pip install poetry
 
-# Copy dependency files
-COPY pyproject.toml poetry.lock* ./
-
 # Configure Poetry
 RUN poetry config virtualenvs.create false
 
+# Copy Poetry files
+COPY pyproject.toml ./
+
 # Install dependencies
-RUN poetry install --only main --no-interaction --no-ansi
+RUN poetry install --only=main --no-root
 
 # Copy application code
 COPY . .
@@ -26,4 +29,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the application
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

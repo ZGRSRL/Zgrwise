@@ -7,13 +7,13 @@ class Settings(BaseSettings):
     # Database
     postgres_user: str = "zgr"
     postgres_password: str = "zgrpass"
-    postgres_db: str = "Feed"  # Changed to your existing database
+    postgres_db: str = "zgrwise"
     postgres_host: str = "localhost"
     postgres_port: str = "5432"
     
     @property
     def database_url(self) -> str:
-        return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        return f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
     
     # Redis
     redis_url: str = "redis://localhost:6379/0"

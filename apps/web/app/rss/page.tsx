@@ -35,9 +35,7 @@ export default function RSSPage() {
 
   const fetchFeeds = async () => {
     try {
-      const response = await fetch('/api/rss/feeds', {
-        headers: { 'X-API-Key': 'devkey' }
-      })
+      const response = await fetch('/api/rss/feeds')
       if (response.ok) {
         const data = await response.json()
         setFeeds(data)
@@ -49,9 +47,7 @@ export default function RSSPage() {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('/api/rss/articles', {
-        headers: { 'X-API-Key': 'devkey' }
-      })
+      const response = await fetch('/api/rss/items')
       if (response.ok) {
         const data = await response.json()
         setArticles(data)
@@ -69,8 +65,7 @@ export default function RSSPage() {
       const response = await fetch('/api/rss/feeds', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': 'devkey'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(newFeed)
       })
@@ -88,9 +83,8 @@ export default function RSSPage() {
 
   const refreshFeed = async (feedId: number) => {
     try {
-      await fetch(`/api/rss/feeds/${feedId}/refresh`, {
-        method: 'POST',
-        headers: { 'X-API-Key': 'devkey' }
+      await fetch(`/api/rss/refresh/${feedId}`, {
+        method: 'POST'
       })
       fetchArticles()
     } catch (error) {

@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.db import Base
 from app.models import *  # Import all models
+from app.models_rss import *  # Import RSS models
 from app.config import settings
 
 # this is the Alembic Config object, which provides

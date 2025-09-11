@@ -1,23 +1,6 @@
-"""
-Embeddings utilities for ZgrWise
-"""
-
-import logging
+# Yer tutucu: embedding yoksa arama yine çalışsın diye boş bırakıyoruz.
+# İleride sentence-transformers ile gerçek vektör eklenir.
 from typing import List
 
-logger = logging.getLogger(__name__)
-
-
-def create_embedding(text: str) -> List[float]:
-    """Create a simple embedding - return zeros for now"""
-    return [0.0] * 384
-
-
-def create_batch_embeddings(texts: List[str]) -> List[List[float]]:
-    """Create embeddings for multiple texts"""
-    return [[0.0] * 384 for _ in texts]
-
-
-def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
-    """Calculate cosine similarity between two vectors"""
-    return 0.0
+def embed_texts(texts: List[str]) -> list[list[float]]:
+    return [[0.0] * 8 for _ in texts]  # dummy

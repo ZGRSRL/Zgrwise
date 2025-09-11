@@ -39,13 +39,11 @@ services:
   api:
     build: ./apps/api
     environment:
-      DATABASE_URL: postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB
-      REDIS_URL: redis://redis:6379/0
-      OLLAMA_BASE: http://ollama:11434
-      EMB_MODEL: ${EMB_MODEL:-bge-small-en-v1.5}
-      EMB_DIM: ${EMB_DIM:-384}
-      OBSIDIAN_EXPORT_PATH: /data/exports
-      API_KEY: ${API_KEY:-devkey}
+      - PYTHONPATH=/app
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - OLLAMA_BASE=${OLLAMA_BASE}
+      - API_KEY=${API_KEY}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -57,18 +55,13 @@ services:
 
   worker:
     build: ./apps/worker
+    command: python -m worker.main
+    depends_on: [api, redis, db]
     environment:
-      DATABASE_URL: postgresql+psycopg://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB
-      REDIS_PASSWORD: $POSTGRES_PASSWORD
-      REDIS_URL: redis://redis:6379/0
-      OLLAMA_BASE: http://ollama:11434
-      EMB_MODEL: ${EMB_MODEL:-bge-small-en-v1.5}
-      EMB_DIM: ${EMB_DIM:-384}
-      OBSIDIAN_EXPORT_PATH: /data/exports
-    depends_on:
-      db: { condition: service_healthy }
-      redis: { condition: service_healthy }
-      ollama: { condition: service_healthy }
+      - PYTHONPATH=/app
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - OLLAMA_BASE=${OLLAMA_BASE}
     volumes:
       - ./apps/worker:/worker
       - ./data/exports:/data/exports
@@ -76,13 +69,26 @@ services:
   web:
     build: ./apps/web
     environment:
-      NEXT_PUBLIC_API_BASE: http://localhost:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       api: { condition: service_started }
     ports: ["3000:3000"]
     volumes:
       - ./apps/web:/app
 
+  scheduler:
+    build: ./apps/worker
+    command: python -m worker.scheduler
+    depends_on: [api, worker, redis, db]
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - OLLAMA_BASE=${OLLAMA_BASE}
+    volumes:
+      - ./apps/worker:/worker
+
 volumes:
   db_data:
-  ollama_data: 
+  ollama_data:
+  exports: 

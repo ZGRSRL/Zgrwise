@@ -1,31 +1,10 @@
-"""
-Database utilities for worker
-"""
-
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from contextlib import contextmanager
+import os
 
-# Database connection - Updated to use Feed database
-DATABASE_URL = f"postgresql://zgr:zgrpass@localhost:5432/Feed"
+DB_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://zgr:zgrpass@db:5432/zgrwise")
+_engine = create_engine(DB_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False)
 
-# Create engine
-engine = create_engine(DATABASE_URL)
-
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@contextmanager
 def get_db_session():
-    """Get database session with automatic cleanup"""
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close() 
+    return SessionLocal()
