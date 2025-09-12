@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, HttpUrl
-from packages.shared.schemas import SourceType
+from enum import Enum
+
+class SourceType(str, Enum):
+    WEB = "web"
+    PDF = "pdf"
+    YOUTUBE = "youtube"
+    NEWSLETTER = "newsletter"
+    KINDLE = "kindle"
+    RSS = "rss"
 
 
 class SourceCreate(BaseModel):

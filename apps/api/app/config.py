@@ -1,42 +1,35 @@
 import os
 from typing import Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     # Database
-    postgres_user: str = "zgr"
-    postgres_password: str = "zgrpass"
-    postgres_db: str = "zgrwise"
-    postgres_host: str = "localhost"
-    postgres_port: str = "5432"
+    DATABASE_URL: str
+    REDIS_URL: str = "redis://redis:6379/0"
     
-    @property
-    def database_url(self) -> str:
-        return f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
-    
-    # Redis
-    redis_url: str = "redis://localhost:6379/0"
-    
-    # Ollama
-    ollama_base: str = "http://localhost:11434"
-    ollama_model: str = "llama3"
+    # AI Service
+    GEMINI_API_KEY: str = "temp-key"
+    AI_MODEL: str = "gemini-1.5-flash"
     
     # Embeddings
-    emb_model: str = "BAAI/bge-small-en-v1.5"
-    emb_dim: int = 384
+    EMB_MODEL: str = "BAAI/bge-small-en-v1.5"
+    EMB_DIM: int = 384
     
-    # API
-    api_key: str = "devkey"
+    # API Security
+    API_KEY: str
+    SECRET_KEY: str = "default-secret-key-change-in-production"
+    
+    # CORS
+    CORS_ALLOW_ORIGINS: str = "http://localhost:3000,http://localhost:8501"
     
     # Export
-    obsidian_export_path: str = "./data/exports"
+    OBSIDIAN_EXPORT_PATH: str = "./data/exports"
     
     # Security & Rate Limiting
-    rate_limit_per_minute: int = 100
+    RATE_LIMIT_PER_MINUTE: int = 100
     
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
-settings = Settings() 
+settings = Settings()  # env yoksa burada hata versin 

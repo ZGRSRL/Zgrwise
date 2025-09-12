@@ -1,0 +1,10 @@
+{
+  "id": "zgrwise-sync",
+  "name": "ZgrWise Sync",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Sync highlights and sources from ZgrWise to Obsidian",
+  "author": "Your Name",
+  "authorUrl": "https://github.com/yourusername",
+  "isDesktopOnly": false
+} 

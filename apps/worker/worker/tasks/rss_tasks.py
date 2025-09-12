@@ -1,16 +1,25 @@
 import requests, feedparser, hashlib, dateutil.parser
 from sqlalchemy.orm import Session
 from worker.utils.db import get_db_session   # küçük yardımcı: SessionLocal()
-from apps.api.app.models_rss import RSSFeed, RSSItem
+from apps.api.app.models import RSSFeed, RSSItem
 from trafilatura import extract as tr_extract
+from urllib.parse import urlsplit
 import os, json
 
 OLLAMA = os.getenv("OLLAMA_BASE","http://ollama:11434")
 
+def _normalize_guid(gid: str, link: str) -> str:
+    base = (gid or "").strip() or (link or "").strip()
+    # link'te query/frag ayıklayalım, küçük harfleyelim
+    if base.startswith("http"):
+        u = urlsplit(base)
+        base = f"{u.scheme}://{u.netloc}{u.path}".lower()
+    return hashlib.sha256(base.encode("utf-8")).hexdigest()
+
 def _guid_key(e):
-    gid = getattr(e, "id", None) or e.get("id") or ""
-    link = getattr(e, "link", None) or e.get("link") or ""
-    return hashlib.md5((gid + "|" + link).encode("utf-8")).hexdigest()
+    gid = getattr(e, "id", None) or (e.get("id") if isinstance(e, dict) else "")
+    link = getattr(e, "link", None) or (e.get("link") if isinstance(e, dict) else "")
+    return _normalize_guid(gid, link)
 
 def fetch_and_process_feed(feed_id: int):
     db: Session = get_db_session()
@@ -38,7 +47,7 @@ def fetch_and_process_feed(feed_id: int):
 
         for e in data.entries:
             key = _guid_key(e)
-            exists = db.query(RSSItem).filter_by(feed_id=feed.id, guid_hash=key).first()
+            exists = db.query(RSSItem).filter_by(feed_id=feed.id, guid=key).first()
             if exists: continue
 
             published = None
@@ -48,13 +57,11 @@ def fetch_and_process_feed(feed_id: int):
 
             item = RSSItem(
                 feed_id=feed.id,
-                guid_hash=key,
+                guid=key,
                 link=getattr(e,"link",None) or "",
                 title=getattr(e,"title",None),
-                author=getattr(e,"author",None),
                 published_at=published,
-                summary_html=getattr(e,"summary",""),
-                raw=json.loads(json.dumps(e, default=lambda o: getattr(o, "__dict__", str(o))))
+                content_text=""
             )
             
             # İçerik çıkar (link'ten)
@@ -64,23 +71,6 @@ def fetch_and_process_feed(feed_id: int):
                 item.content_text = text.strip()
             except: pass
 
-            db.add(item)
-            db.commit()
-
-            # Özet + etiket (Ollama)
-            if item.content_text:
-                prompt = f"Özetle ve 5 etiket öner: {item.content_text[:6000]}"
-                try:
-                    jr = requests.post(f"{OLLAMA}/api/generate",
-                                        json={"model":"llama3","prompt":prompt,"stream":False},
-                                        timeout=60).json()
-                    out = jr.get("response","")
-                    item.summary_html = f"<p>{out}</p>"
-                except: pass
-
-            # (Burada embeddings işini mevcut pipeline'a ver)
-            item.vectors_ok = True
-            item.status = "processed"
             db.add(item)
             db.commit()
 

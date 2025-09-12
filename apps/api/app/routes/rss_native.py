@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..db import get_db
-from ..models_rss import RSSFeed, RSSItem
+from ..models import RSSFeed, RSSItem
 from pydantic import BaseModel
 from datetime import datetime, timezone
 import hashlib

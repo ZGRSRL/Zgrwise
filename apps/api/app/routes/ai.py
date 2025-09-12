@@ -8,24 +8,25 @@ router = APIRouter()
 
 @router.post("/ai/summarize", response_model=AIResponse)
 async def summarize_text(request: AIRequest):
-    """Summarize text using Ollama"""
+    """Summarize text using Gemini API"""
     try:
         prompt = f"TL;DR (max 2 cümle): {request.text}"
         
         response = requests.post(
-            f"{settings.ollama_base}/api/generate",
+            f"https://generativelanguage.googleapis.com/v1beta/models/{settings.AI_MODEL}:generateContent",
+            params={"key": settings.GEMINI_API_KEY},
             json={
-                "model": "llama3",
-                "prompt": prompt,
-                "stream": False
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }]
             },
             timeout=30
         )
         
         if response.status_code == 200:
             result = response.json()
-            summary = result.get("response", "").strip()
-            return AIResponse(result=summary, model="llama3")
+            summary = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+            return AIResponse(result=summary, model=settings.AI_MODEL)
         else:
             # Fallback to simple summary
             words = request.text.split()[:20]
@@ -41,24 +42,25 @@ async def summarize_text(request: AIRequest):
 
 @router.post("/ai/autotag", response_model=AIResponse)
 async def autotag_text(request: AIRequest):
-    """Generate tags for text using Ollama"""
+    """Generate tags for text using Gemini API"""
     try:
         prompt = f"İçeriğe 3–7 arası kısa, virgülle ayrılmış etiket öner: {request.text}"
         
         response = requests.post(
-            f"{settings.ollama_base}/api/generate",
+            f"https://generativelanguage.googleapis.com/v1beta/models/{settings.AI_MODEL}:generateContent",
+            params={"key": settings.GEMINI_API_KEY},
             json={
-                "model": "llama3",
-                "prompt": prompt,
-                "stream": False
+                "contents": [{
+                    "parts": [{"text": prompt}]
+                }]
             },
             timeout=30
         )
         
         if response.status_code == 200:
             result = response.json()
-            tags = result.get("response", "").strip()
-            return AIResponse(result=tags, model="llama3")
+            tags = result.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+            return AIResponse(result=tags, model=settings.AI_MODEL)
         else:
             # Fallback tags
             fallback_tags = "bilgi, öğrenme, not"

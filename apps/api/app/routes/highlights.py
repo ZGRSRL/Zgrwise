@@ -11,17 +11,21 @@ router = APIRouter()
 @router.post("/highlights", response_model=HighlightResponse)
 async def create_highlight(highlight: HighlightCreate, db: Session = Depends(get_db)):
     """Create a new highlight"""
-    # Verify source exists
-    source = db.query(Source).filter(Source.id == highlight.source_id).first()
-    if not source:
-        raise HTTPException(status_code=404, detail="Source not found")
-    
-    db_highlight = Highlight(**highlight.dict())
-    db.add(db_highlight)
-    db.commit()
-    db.refresh(db_highlight)
-    
-    return db_highlight
+    try:
+        # Verify source exists
+        source = db.query(Source).filter(Source.id == highlight.source_id).first()
+        if not source:
+            raise HTTPException(status_code=404, detail="Source not found")
+        
+        db_highlight = Highlight(**highlight.dict())
+        db.add(db_highlight)
+        db.commit()
+        db.refresh(db_highlight)
+        
+        return db_highlight
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/highlights", response_model=List[HighlightResponse])

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..db import get_db
-from ..models_rss import RSSItem
+from ..models import RSSItem
 import os, pathlib
 
 router = APIRouter(prefix="/api/export", tags=["export"])

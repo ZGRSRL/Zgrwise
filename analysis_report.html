@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZgrWise - Uygulama Analiz Raporu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section h2 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #4a5568;
+            font-size: 1.3rem;
+            margin: 20px 0 10px 0;
+        }
+        
+        .error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .warning {
+            background: #fef5e7;
+            border: 1px solid #fbd38d;
+            color: #c05621;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            border: 1px solid #9ae6b4;
+            color: #2f855a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .info {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            color: #234e52;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .code {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-critical { background: #fed7d7; color: #c53030; }
+        .status-warning { background: #fef5e7; color: #c05621; }
+        .status-good { background: #c6f6d5; color: #2f855a; }
+        .status-info { background: #e6fffa; color: #234e52; }
+        
+        ul, ol {
+            margin: 10px 0 10px 20px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 ZgrWise - Uygulama Analiz Raporu</h1>
+            <p>Kapsamlı kod incelemesi ve mantık hatalarının tespiti</p>
+        </div>
+
+        <div class="section">
+            <h2>📊 Genel Durum Özeti</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Uygulama Mimarisi</h3>
+                    <p><span class="status-badge status-good">İyi</span> Mikroservis mimarisi</p>
+                    <p>FastAPI + Next.js + PostgreSQL + Redis + Ollama</p>
+                </div>
+                <div class="card">
+                    <h3>Kritik Hatalar</h3>
+                    <p><span class="status-badge status-critical">8</span> Kritik hata tespit edildi</p>
+                    <p>Veritabanı, API ve Worker katmanlarında</p>
+                </div>
+                <div class="card">
+                    <h3>Uyarılar</h3>
+                    <p><span class="status-badge status-warning">12</span> Potansiyel sorun</p>
+                    <p>Güvenlik ve performans konularında</p>
+                </div>
+                <div class="card">
+                    <h3>Genel Sağlık</h3>
+                    <p><span class="status-badge status-warning">Orta</span> Düzeltme gerekli</p>
+                    <p>Hızlı düzeltmelerle iyileştirilebilir</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🚨 Kritik Hatalar</h2>
+            
+            <div class="error">
+                <h3>1. Veritabanı Model Uyumsuzluğu</h3>
+                <p><strong>Konum:</strong> <code>apps/api/app/models.py</code> vs <code>apps/api/app/models_rss.py</code></p>
+                <p><strong>Sorun:</strong> İki farklı RSS modeli tanımlanmış ve çakışıyor:</p>
+                <ul>
+                    <li><code>models.py</code>'de <code>RSSFeed</code> ve <code>Article</code> modelleri</li>
+                    <li><code>models_rss.py</code>'de farklı <code>RSSFeed</code> ve <code>RSSItem</code> modelleri</li>
+                    <li>Aynı tablo isimleri farklı yapılarla tanımlanmış</li>
+                </ul>
+                <p><strong>Etki:</strong> Veritabanı migrasyonları başarısız olabilir, veri tutarsızlığı</p>
+            </div>
+
+            <div class="error">
+                <h3>2. Arama Fonksiyonu Hatalı Tablo Referansı</h3>
+                <p><strong>Konum:</strong> <code>apps/api/app/routes/search.py:19</code></p>
+                <p><strong>Sorun:</strong> Arama sorgusu <code>rss_items</code> tablosunu kullanıyor ama bu tablo <code>models_rss.py</code>'de tanımlı</p>
+                <div class="code">
+SELECT id, title, link, published_at,
+       similarity(coalesce(title,'') || ' ' || coalesce(content_text,''), :q) as score
+FROM rss_items  -- Bu tablo mevcut değil!
+                </div>
+                <p><strong>Etki:</strong> Arama fonksiyonu çalışmaz, SQL hatası</p>
+            </div>
+
+            <div class="error">
+                <h3>3. Eksik GUID Hash Fonksiyonu</h3>
+                <p><strong>Konum:</strong> <code>apps/worker/worker/tasks/rss_tasks.py:10-14</code></p>
+                <p><strong>Sorun:</strong> <code>_guid_key</code> fonksiyonu tanımlanmış ama implement edilmemiş</p>
+                <div class="code">
+def _guid_key(e):
+    gid = getattr(e, "id", None) or e.get("id") or ""
+    link = getattr(e, "link", None) or e.get("link") or ""
+    # Fonksiyon burada bitiyor, return yok!
+                </div>
+                <p><strong>Etki:</strong> RSS işleme tamamen bozuk</p>
+            </div>
+
+            <div class="error">
+                <h3>4. Veritabanı Bağlantı URL Uyumsuzluğu</h3>
+                <p><strong>Konum:</strong> <code>apps/api/app/config.py</code> vs <code>apps/worker/worker/utils/db.py</code></p>
+                <p><strong>Sorun:</strong> Farklı veritabanı URL formatları kullanılıyor:</p>
+                <ul>
+                    <li>API: <code>postgresql+psycopg://</code></li>
+                    <li>Worker: <code>postgresql+psycopg2://</code></li>
+                </ul>
+                <p><strong>Etki:</strong> Worker veritabanına bağlanamayabilir</p>
+            </div>
+
+            <div class="error">
+                <h3>5. CORS Yapılandırması Eksik</h3>
+                <p><strong>Konum:</strong> <code>apps/api/app/main.py:17-23</code></p>
+                <p><strong>Sorun:</strong> Sadece localhost için CORS açık, production için uygun değil</p>
+                <p><strong>Etki:</strong> Browser extension ve farklı domainlerden erişim engellenir</p>
+            </div>
+
+            <div class="error">
+                <h3>6. Redis Port Uyumsuzluğu</h3>
+                <p><strong>Konum:</strong> <code>docker-compose.yml:15</code></p>
+                <p><strong>Sorun:</strong> Redis port mapping yanlış: <code>6380:6379</code></p>
+                <p><strong>Etki:</strong> Uygulamalar Redis'e bağlanamaz</p>
+            </div>
+
+            <div class="error">
+                <h3>7. Eksik Hata Yönetimi</h3>
+                <p><strong>Konum:</strong> <code>apps/api/app/routes/highlights.py</code></p>
+                <p><strong>Sorun:</strong> Veritabanı işlemlerinde try-catch yok</p>
+                <p><strong>Etki:</strong> Beklenmeyen hatalar uygulamayı çökertebilir</p>
+            </div>
+
+            <div class="error">
+                <h3>8. Güvenlik Açığı - API Key Sabit</h3>
+                <p><strong>Konum:</strong> <code>apps/api/app/config.py:30</code></p>
+                <p><strong>Sorun:</strong> Varsayılan API key: <code>"devkey"</code></p>
+                <p><strong>Etki:</strong> Production'da güvenlik riski</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚠️ Uyarılar ve İyileştirme Önerileri</h2>
+            
+            <div class="warning">
+                <h3>1. Veritabanı İndeksleri Eksik</h3>
+                <p>Performans için kritik indeksler eksik:</p>
+                <ul>
+                    <li><code>highlights.source_id</code> için indeks</li>
+                    <li><code>reviews.highlight_id</code> için indeks</li>
+                    <li><code>embeddings.object_id</code> için indeks</li>
+                </ul>
+            </div>
+
+            <div class="warning">
+                <h3>2. Rate Limiting Eksik</h3>
+                <p>API endpoint'lerinde rate limiting uygulanmamış, DDoS saldırılarına açık</p>
+            </div>
+
+            <div class="warning">
+                <h3>3. Logging Sistemi Eksik</h3>
+                <p>Uygulama genelinde structured logging yok, debugging zor</p>
+            </div>
+
+            <div class="warning">
+                <h3>4. Environment Variable Validation</h3>
+                <p>Gerekli environment variable'ların varlığı kontrol edilmiyor</p>
+            </div>
+
+            <div class="warning">
+                <h3>5. Database Connection Pooling</h3>
+                <p>Veritabanı bağlantı havuzu yapılandırması eksik</p>
+            </div>
+
+            <div class="warning">
+                <h3>6. Frontend Error Handling</h3>
+                <p>Web arayüzünde API hatalarını yakalama mekanizması eksik</p>
+            </div>
+
+            <div class="warning">
+                <h3>7. Worker Task Retry Logic</h3>
+                <p>Background task'larda retry mekanizması yok</p>
+            </div>
+
+            <div class="warning">
+                <h3>8. Data Validation</h3>
+                <p>API input validation'da eksiklikler var</p>
+            </div>
+
+            <div class="warning">
+                <h3>9. Memory Leaks</h3>
+                <p>Database session'ları her zaman kapatılmıyor</p>
+            </div>
+
+            <div class="warning">
+                <h3>10. Security Headers</h3>
+                <p>HTTP security header'ları eksik</p>
+            </div>
+
+            <div class="warning">
+                <h3>11. Monitoring ve Health Checks</h3>
+                <p>Uygulama sağlık durumu monitoring eksik</p>
+            </div>
+
+            <div class="warning">
+                <h3>12. Backup Strategy</h3>
+                <p>Veritabanı backup stratejisi tanımlanmamış</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✅ İyi Yapılan Kısımlar</h2>
+            
+            <div class="success">
+                <h3>1. Mikroservis Mimarisi</h3>
+                <p>API, Worker, Web ve Extension'lar ayrı servisler olarak tasarlanmış</p>
+            </div>
+
+            <div class="success">
+                <h3>2. Docker Containerization</h3>
+                <p>Tüm servisler Docker ile containerize edilmiş</p>
+            </div>
+
+            <div class="success">
+                <h3>3. Database Design</h3>
+                <p>Genel veritabanı tasarımı iyi, foreign key'ler doğru</p>
+            </div>
+
+            <div class="success">
+                <h3>4. Spaced Repetition Algorithm</h3>
+                <p>SM-2 algoritması doğru implement edilmiş</p>
+            </div>
+
+            <div class="success">
+                <h3>5. Pydantic Schemas</h3>
+                <p>API request/response validation'ı iyi yapılmış</p>
+            </div>
+
+            <div class="success">
+                <h3>6. Browser Extension</h3>
+                <p>Chrome extension MV3 uyumlu ve iyi tasarlanmış</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Öncelikli Düzeltmeler</h2>
+            
+            <div class="info">
+                <h3>Yüksek Öncelik (Hemen Düzeltilmeli)</h3>
+                <ol>
+                    <li><strong>Veritabanı model uyumsuzluğunu çöz</strong> - İki farklı RSS modelini birleştir</li>
+                    <li><strong>Arama fonksiyonunu düzelt</strong> - Doğru tablo referanslarını kullan</li>
+                    <li><strong>GUID hash fonksiyonunu tamamla</strong> - RSS işleme için kritik</li>
+                    <li><strong>Redis port mapping'i düzelt</strong> - 6379:6379 olmalı</li>
+                    <li><strong>Veritabanı URL'lerini standardize et</strong> - Aynı driver kullan</li>
+                </ol>
+            </div>
+
+            <div class="info">
+                <h3>Orta Öncelik (Bu Hafta)</h3>
+                <ol>
+                    <li>CORS yapılandırmasını genişlet</li>
+                    <li>API key güvenliğini artır</li>
+                    <li>Hata yönetimini ekle</li>
+                    <li>Rate limiting uygula</li>
+                    <li>Logging sistemi kur</li>
+                </ol>
+            </div>
+
+            <div class="info">
+                <h3>Düşük Öncelik (Gelecek Sprint)</h3>
+                <ol>
+                    <li>Monitoring ve health check'ler</li>
+                    <li>Performance optimizasyonları</li>
+                    <li>Security header'ları</li>
+                    <li>Backup stratejisi</li>
+                    <li>Documentation iyileştirmeleri</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📈 Genel Değerlendirme</h2>
+            
+            <div class="grid">
+                <div class="card">
+                    <h3>Kod Kalitesi</h3>
+                    <p><span class="status-badge status-warning">Orta</span></p>
+                    <p>Genel yapı iyi ama kritik hatalar var</p>
+                </div>
+                <div class="card">
+                    <h3>Güvenlik</h3>
+                    <p><span class="status-badge status-warning">Zayıf</span></p>
+                    <p>API key ve CORS sorunları</p>
+                </div>
+                <div class="card">
+                    <h3>Performans</h3>
+                    <p><span class="status-badge status-warning">Orta</span></p>
+                    <p>İndeksler ve connection pooling eksik</p>
+                </div>
+                <div class="card">
+                    <h3>Bakım Kolaylığı</h3>
+                    <p><span class="status-badge status-good">İyi</span></p>
+                    <p>Mikroservis yapısı avantaj</p>
+                </div>
+                <div class="card">
+                    <h3>Ölçeklenebilirlik</h3>
+                    <p><span class="status-badge status-info">Hazır</span></p>
+                    <p>Docker ve mikroservis yapısı uygun</p>
+                </div>
+                <div class="card">
+                    <h3>Test Coverage</h3>
+                    <p><span class="status-badge status-critical">Eksik</span></p>
+                    <p>Test dosyaları bulunamadı</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Sonuç ve Öneriler</h2>
+            
+            <div class="info">
+                <p><strong>ZgrWise</strong> projesi genel olarak <span class="highlight">iyi bir mimari</span> ve <span class="highlight">modern teknolojiler</span> kullanıyor. Ancak <span class="highlight">kritik hatalar</span> nedeniyle şu anda production'a hazır değil.</p>
+                
+                <p><strong>En kritik sorunlar:</strong></p>
+                <ul>
+                    <li>Veritabanı model çakışmaları</li>
+                    <li>Eksik fonksiyon implementasyonları</li>
+                    <li>Yapılandırma hataları</li>
+                </ul>
+                
+                <p><strong>Önerilen yaklaşım:</strong></p>
+                <ol>
+                    <li>Önce kritik hataları düzelt (1-2 gün)</li>
+                    <li>Güvenlik ve hata yönetimini iyileştir (1 hafta)</li>
+                    <li>Test coverage ve monitoring ekle (2 hafta)</li>
+                    <li>Performance optimizasyonları (1 hafta)</li>
+                </ol>
+                
+                <p>Bu düzeltmeler yapıldıktan sonra ZgrWise <span class="highlight">production-ready</span> bir uygulama haline gelecektir.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

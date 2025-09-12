@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKe
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .db import Base
-from packages.shared.schemas import SourceType
+from .types import SourceType
 
 # For pgvector support - we'll use a custom type
 from sqlalchemy import TypeDecorator, String
