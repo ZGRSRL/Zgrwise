@@ -1,6 +1,34 @@
-# Yer tutucu: embedding yoksa arama yine çalışsın diye boş bırakıyoruz.
-# İleride sentence-transformers ile gerçek vektör eklenir.
-from typing import List
+"""
+Embedding utilities
+"""
+from sentence_transformers import SentenceTransformer
+import numpy as np
 
-def embed_texts(texts: List[str]) -> list[list[float]]:
-    return [[0.0] * 8 for _ in texts]  # dummy
+# Initialize model
+_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
+
+def create_embedding(text: str) -> list:
+    """
+    Create embedding for text
+    
+    Args:
+        text: Text to embed
+        
+    Returns:
+        List of embedding values
+    """
+    if not text:
+        return [0.0] * 384
+    
+    try:
+        embedding = _model.encode(text, normalize_embeddings=True)
+        return embedding.tolist()
+    except Exception as e:
+        print(f"Error creating embedding: {e}")
+        return [0.0] * 384
+
+
+def get_embedding_model():
+    """Get the embedding model instance"""
+    return _model

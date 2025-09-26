@@ -1,126 +1,263 @@
 """
-Export tasks for Obsidian and other formats
+Export Tasks
+Handles exporting digest and articles to various formats
 """
-
-import logging
 import os
+from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List
-from worker.utils.db import get_db_session
-from worker.utils.models import Source, Highlight
+from sqlalchemy.orm import sessionmaker
+from app.db import engine
+from app.models import Article
 
-logger = logging.getLogger(__name__)
-
-EXPORT_PATH = os.getenv('OBSIDIAN_EXPORT_PATH', './data/exports')
-
-
-def export_to_obsidian() -> Dict[str, Any]:
-    """Export highlights to Obsidian format"""
-    try:
-        # Ensure export directory exists
-        os.makedirs(EXPORT_PATH, exist_ok=True)
-        
-        with get_db_session() as db:
-            # Get all highlights with sources
-            highlights = db.query(Highlight).join(Source).all()
-            
-            exported_count = 0
-            for highlight in highlights:
-                try:
-                    content = generate_obsidian_content(highlight)
-                    filename = f"{highlight.id}_{highlight.text[:50].replace(' ', '_')}.md"
-                    filepath = os.path.join(EXPORT_PATH, filename)
-                    
-                    with open(filepath, 'w', encoding='utf-8') as f:
-                        f.write(content)
-                    
-                    exported_count += 1
-                    
-                except Exception as e:
-                    logger.error(f"Error exporting highlight {highlight.id}: {e}")
-                    continue
-            
-            logger.info(f"Exported {exported_count} highlights to Obsidian")
-            return {"status": "success", "exported_count": exported_count}
-            
-    except Exception as e:
-        logger.error(f"Error in Obsidian export: {e}")
-        return {"status": "error", "message": str(e)}
+# Create session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def generate_obsidian_content(highlight: Highlight) -> str:
-    """Generate Obsidian markdown content for a highlight"""
-    source = highlight.source
+def get_session():
+    """Get database session"""
+    return SessionLocal()
+
+
+def export_markdown(filename: str, content: str, base_path: str = None) -> str:
+    """
+    Export content to markdown file
     
-    # Create frontmatter
-    frontmatter = f"""---
-title: "{source.title}"
-source_url: "{source.url}"
-source_type: "{source.type}"
-origin: "{source.origin}"
-author: "{source.author or 'Unknown'}"
-created: "{source.created_at}"
-tags: [{', '.join(source.tags) if source.tags else ''}]
-summary: "{source.summary or ''}"
+    Args:
+        filename: Name of the file to create
+        content: Markdown content to write
+        base_path: Base directory path (defaults to OBSIDIAN_EXPORT_PATH)
+        
+    Returns:
+        Path to the created file
+    """
+    if base_path is None:
+        base_path = os.getenv("OBSIDIAN_EXPORT_PATH", "./data/exports")
+    
+    # Create base directory if it doesn't exist
+    base_dir = Path(base_path)
+    base_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create file path
+    file_path = base_dir / filename
+    
+    # Write content to file
+    file_path.write_text(content, encoding="utf-8")
+    
+    print(f"Exported markdown to: {file_path}")
+    return str(file_path)
+
+
+def export_daily_digest(date: str = None) -> str:
+    """
+    Export daily digest to markdown
+    
+    Args:
+        date: Date in YYYY-MM-DD format (defaults to today)
+        
+    Returns:
+        Path to the exported file
+    """
+    db = get_session()
+    try:
+        # Parse date or use today
+        if date:
+            target_date = datetime.strptime(date, "%Y-%m-%d").date()
+        else:
+            target_date = datetime.now().date()
+        
+        # Calculate date range
+        start_date = datetime.combine(target_date, datetime.min.time())
+        end_date = start_date + timedelta(days=1)
+        
+        # Get articles for the date
+        articles = db.query(Article).filter(
+            Article.created_at >= start_date,
+            Article.created_at < end_date,
+            Article.is_read == False
+        ).order_by(Article.priority.desc()).all()
+        
+        # Generate markdown content
+        markdown = generate_digest_markdown(articles, target_date)
+        
+        # Create filename
+        filename = f"daily-digest-{target_date.strftime('%Y-%m-%d')}.md"
+        
+        # Export to file
+        file_path = export_markdown(filename, markdown)
+        
+        return file_path
+        
+    except Exception as e:
+        print(f"Error exporting daily digest: {e}")
+        return ""
+    finally:
+        db.close()
+
+
+def generate_digest_markdown(articles: List[Article], date) -> str:
+    """
+    Generate markdown content for digest
+    
+    Args:
+        articles: List of Article objects
+        date: Date for the digest
+        
+    Returns:
+        Markdown string
+    """
+    date_str = date.strftime("%Y-%m-%d")
+    markdown = f"# ZgrWise – Daily Digest ({date_str})\n\n"
+    
+    if not articles:
+        markdown += "No articles found for this date.\n"
+        return markdown
+    
+    # Group by priority
+    high_priority = [article for article in articles if article.priority >= 80]
+    medium_priority = [article for article in articles if 50 <= article.priority < 80]
+    low_priority = [article for article in articles if article.priority < 50]
+    
+    if high_priority:
+        markdown += "## 🔥 High Priority\n\n"
+        for article in high_priority:
+            markdown += f"- [{article.title}]({article.url})"
+            if article.summary:
+                one_liner = article.summary.split("\n")[0]
+                markdown += f" — {one_liner}"
+            elif article.content_md:
+                content = article.content_md.replace("\n", " ").strip()
+                sentences = content.split(".")
+                one_liner = sentences[0] + "." if sentences[0] else ""
+                markdown += f" — {one_liner}"
+            if article.source_domain:
+                markdown += f" *({article.source_domain})*"
+            markdown += "\n"
+        markdown += "\n"
+    
+    if medium_priority:
+        markdown += "## 📰 Medium Priority\n\n"
+        for article in medium_priority:
+            markdown += f"- [{article.title}]({article.url})"
+            if article.summary:
+                one_liner = article.summary.split("\n")[0]
+                markdown += f" — {one_liner}"
+            elif article.content_md:
+                content = article.content_md.replace("\n", " ").strip()
+                sentences = content.split(".")
+                one_liner = sentences[0] + "." if sentences[0] else ""
+                markdown += f" — {one_liner}"
+            if article.source_domain:
+                markdown += f" *({article.source_domain})*"
+            markdown += "\n"
+        markdown += "\n"
+    
+    if low_priority:
+        markdown += "## 📚 Low Priority\n\n"
+        for article in low_priority:
+            markdown += f"- [{article.title}]({article.url})"
+            if article.summary:
+                one_liner = article.summary.split("\n")[0]
+                markdown += f" — {one_liner}"
+            elif article.content_md:
+                content = article.content_md.replace("\n", " ").strip()
+                sentences = content.split(".")
+                one_liner = sentences[0] + "." if sentences[0] else ""
+                markdown += f" — {one_liner}"
+            if article.source_domain:
+                markdown += f" *({article.source_domain})*"
+            markdown += "\n"
+    
+    return markdown
+
+
+def export_article_to_obsidian(article_id: int) -> str:
+    """
+    Export a single article to Obsidian format
+    
+    Args:
+        article_id: ID of the article to export
+        
+    Returns:
+        Path to the exported file
+    """
+    db = get_session()
+    try:
+        article = db.query(Article).get(article_id)
+        if not article:
+            print(f"Article with ID {article_id} not found")
+            return ""
+        
+        # Generate Obsidian frontmatter
+        frontmatter = f"""---
+title: "{article.title}"
+url: "{article.url}"
+source_domain: "{article.source_domain or ''}"
+priority: {article.priority}
+published_at: "{article.published_at.isoformat() if article.published_at else ''}"
+tags: {article.tags or []}
+created_at: "{article.created_at.isoformat()}"
 ---
 
-# Highlights
+# {article.title}
 
-> {highlight.text}
-
-- note: {highlight.note or ''}
-- added: {highlight.created_at}
-- location: {highlight.location or ''}
-
-## Source Details
-
-**Title:** {source.title}
-**URL:** {source.url}
-**Type:** {source.type}
-**Origin:** {source.origin}
-**Author:** {source.author or 'Unknown'}
-**Created:** {source.created_at}
+**Source:** [{article.source_domain or 'Unknown'}]({article.url})
+**Priority:** {article.priority}
+**Published:** {article.published_at.strftime('%Y-%m-%d %H:%M') if article.published_at else 'Unknown'}
 
 """
-    
-    if source.summary:
-        frontmatter += f"**Summary:** {source.summary}\n\n"
-    
-    if source.raw:
-        frontmatter += f"**Content:**\n\n{source.raw}\n"
-    
-    return frontmatter
-
-
-def export_to_markdown(highlight_ids: List[int] = None) -> Dict[str, Any]:
-    """Export specific highlights to markdown"""
-    try:
-        with get_db_session() as db:
-            if highlight_ids:
-                highlights = db.query(Highlight).filter(Highlight.id.in_(highlight_ids)).join(Source).all()
-            else:
-                highlights = db.query(Highlight).join(Source).all()
-            
-            # Generate markdown content
-            content = "# ZgrWise Highlights\n\n"
-            
-            for highlight in highlights:
-                content += f"## {highlight.source.title}\n\n"
-                content += f"> {highlight.text}\n\n"
-                content += f"- Source: {highlight.source.url}\n"
-                content += f"- Added: {highlight.created_at}\n\n"
-            
-            # Save to file
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"highlights_{timestamp}.md"
-            filepath = os.path.join(EXPORT_PATH, filename)
-            
-            with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(content)
-            
-            logger.info(f"Exported {len(highlights)} highlights to {filename}")
-            return {"status": "success", "filename": filename, "exported_count": len(highlights)}
-            
+        
+        # Add summary if available
+        if article.summary:
+            frontmatter += f"## Summary\n\n{article.summary}\n\n"
+        
+        # Add content
+        if article.content_md:
+            frontmatter += f"## Content\n\n{article.content_md}"
+        elif article.content:
+            frontmatter += f"## Content\n\n{article.content}"
+        
+        # Create filename
+        safe_title = "".join(c for c in article.title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        safe_title = safe_title[:50]  # Limit length
+        filename = f"{safe_title}-{article.id}.md"
+        
+        # Export to file
+        file_path = export_markdown(filename, frontmatter)
+        
+        return file_path
+        
     except Exception as e:
-        logger.error(f"Error in markdown export: {e}")
-        return {"status": "error", "message": str(e)} 
+        print(f"Error exporting article {article_id}: {e}")
+        return ""
+    finally:
+        db.close()
+
+
+def export_all_unread_articles() -> List[str]:
+    """
+    Export all unread articles to Obsidian format
+    
+    Returns:
+        List of exported file paths
+    """
+    db = get_session()
+    try:
+        articles = db.query(Article).filter(
+            Article.is_read == False
+        ).order_by(Article.priority.desc()).all()
+        
+        exported_files = []
+        for article in articles:
+            file_path = export_article_to_obsidian(article.id)
+            if file_path:
+                exported_files.append(file_path)
+        
+        print(f"Exported {len(exported_files)} articles to Obsidian")
+        return exported_files
+        
+    except Exception as e:
+        print(f"Error exporting all unread articles: {e}")
+        return []
+    finally:
+        db.close()

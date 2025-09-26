@@ -105,6 +105,7 @@ class RSSFeed(Base):
     last_checked = Column(DateTime)
     is_active = Column(Boolean, default=True)
     category = Column(String)  # 'blog', 'news', 'research', etc.
+    weight = Column(Integer, default=50, nullable=False)  # Priority weight for articles
 
 
 class Article(Base):
@@ -115,11 +116,16 @@ class Article(Base):
     title = Column(String, nullable=False)
     url = Column(String, unique=True, nullable=False)
     content = Column(Text)
+    content_md = Column(Text)  # Markdown content
     summary = Column(Text)
     author = Column(String)
     published_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
     tags = Column(JSON)  # Store tags as JSON array
+    priority = Column(Integer, default=50, nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    source_domain = Column(String)
+    guid = Column(String(64), unique=True)  # Unique identifier for deduplication
     
     # Relationships
     feed = relationship("RSSFeed")
@@ -165,6 +171,21 @@ class Export(Base):
     status = Column(String, nullable=False)
     last_run_at = Column(DateTime)
     config_json = Column(Text)  # JSON string
+
+
+class RSSItem(Base):
+    __tablename__ = "rss_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    feed_id = Column(Integer, ForeignKey("rss_feeds.id"), nullable=False)
+    title = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    content = Column(Text)
+    published_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    feed = relationship("RSSFeed")
 
 
 # Create indexes for better performance

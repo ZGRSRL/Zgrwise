@@ -1,84 +1,98 @@
-import Sidebar from "@/components/Sidebar";
-import FeedItem from "@/components/FeedItem";
-import StatCard from "@/components/StatCard";
-import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-
-export default function Page() {
+export default function HomePage() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_320px]">
-      {/* Left: Sidebar */}
-      <Sidebar />
-
-      {/* Center: Feed */}
-      <main className="min-h-[100dvh] px-4 lg:px-8 py-6">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex-1">
-            <Input placeholder="Search your highlights, articles, and sources…" />
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '2rem' }}>
+          ZgrWise - RSS "Gündem Kaçırmama" Sistemi
+        </h1>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>📰 Bugün</h2>
+            <p style={{ color: '#6b7280', marginBottom: '1rem' }}>Okunmamış makaleleri görüntüle</p>
+            <a 
+              href="/today" 
+              style={{ 
+                display: 'inline-block', 
+                backgroundColor: '#2563eb', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.25rem', 
+                textDecoration: 'none',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#2563eb'}
+            >
+              Görüntüle
+            </a>
           </div>
-          <div className="flex gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">All Content</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>All</DropdownMenuItem>
-                <DropdownMenuItem>AI Matches</DropdownMenuItem>
-                <DropdownMenuItem>Text Matches</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">All Sources</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Web</DropdownMenuItem>
-                <DropdownMenuItem>PDF</DropdownMenuItem>
-                <DropdownMenuItem>YouTube</DropdownMenuItem>
-                <DropdownMenuItem>RSS</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">All Time</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Today</DropdownMenuItem>
-                <DropdownMenuItem>This Week</DropdownMenuItem>
-                <DropdownMenuItem>This Month</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          
+          <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>📊 Günlük Özet</h2>
+            <p style={{ color: '#6b7280', marginBottom: '1rem' }}>Günlük digest ve istatistikler</p>
+            <a 
+              href="/digest" 
+              style={{ 
+                display: 'inline-block', 
+                backgroundColor: '#16a34a', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.25rem', 
+                textDecoration: 'none',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#15803d'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#16a34a'}
+            >
+              Görüntüle
+            </a>
+          </div>
+          
+          <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>⚙️ Ayarlar</h2>
+            <p style={{ color: '#6b7280', marginBottom: '1rem' }}>RSS feed'leri ve sistem ayarları</p>
+            <a 
+              href="/settings" 
+              style={{ 
+                display: 'inline-block', 
+                backgroundColor: '#6b7280', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.25rem', 
+                textDecoration: 'none',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#4b5563'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#6b7280'}
+            >
+              Ayarlar
+            </a>
           </div>
         </div>
-
-        <div className="space-y-3">
-          <FeedItem
-            type="paper"
-            title="Machine learning algorithms can be used to analyze large datasets and extract meaningful patterns…"
-            excerpt="We explore supervised and unsupervised approaches for industrial data streams and propose a hybrid retrieval pipeline…"
-            source="Research Paper • Dr. Smith"
-            timeAgo="2 days ago"
-            scoreTag="AI Match 0.892"
-          />
-          <FeedItem
-            type="web"
-            title="The importance of data visualization in understanding complex information"
-            excerpt="Good visualization practices help transform raw numbers into clear stories. This piece covers layout, hierarchies, and perceptual cues…"
-            source="Blog Post • Jane Doe"
-            timeAgo="1 week ago"
-            scoreTag="Text Match 0.756"
-          />
-          {/* TODO: gerçek veriye bağla */}
+        
+        <div style={{ marginTop: '3rem', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Sistem Durumu</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{ backgroundColor: '#dcfce7', padding: '1rem', borderRadius: '0.5rem' }}>
+              <div style={{ color: '#166534', fontWeight: '600' }}>API</div>
+              <div style={{ color: '#16a34a' }}>Çalışıyor</div>
+            </div>
+            <div style={{ backgroundColor: '#dcfce7', padding: '1rem', borderRadius: '0.5rem' }}>
+              <div style={{ color: '#166534', fontWeight: '600' }}>Database</div>
+              <div style={{ color: '#16a34a' }}>Bağlı</div>
+            </div>
+            <div style={{ backgroundColor: '#dcfce7', padding: '1rem', borderRadius: '0.5rem' }}>
+              <div style={{ color: '#166534', fontWeight: '600' }}>Redis</div>
+              <div style={{ color: '#16a34a' }}>Aktif</div>
+            </div>
+            <div style={{ backgroundColor: '#fef3c7', padding: '1rem', borderRadius: '0.5rem' }}>
+              <div style={{ color: '#92400e', fontWeight: '600' }}>Worker</div>
+              <div style={{ color: '#d97706' }}>Hazırlanıyor</div>
+            </div>
+          </div>
         </div>
-      </main>
-
-      {/* Right: Stats */}
-      <aside className="hidden lg:block border-l bg-white/70 backdrop-blur p-6 space-y-3">
-        <StatCard title="Today" value="12 Highlights" hint="3 new RSS items" />
-        <StatCard title="Review Progress" value="24%" hint="Spaced repetition" />
-        <StatCard title="System" value="All Good" hint="API • DB • Redis" />
-      </aside>
+      </div>
     </div>
   );
 }

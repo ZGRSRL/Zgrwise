@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from .db import engine, Base
-from .routes import health, highlights, search, review, ai, rss, ai_review, sources, rss_native, export
+from .routes import health, highlights, search, review, ai, rss, ai_review, sources, rss_native, export, digest
+from .routes import articles
 from .config import settings
 import os
 
@@ -42,6 +43,8 @@ app.include_router(rss_native.router, tags=["rss-native"])  # No API key require
 app.include_router(ai_review.router, prefix="/api", tags=["ai-review"], dependencies=[Depends(verify_api_key)])
 app.include_router(sources.router, prefix="/api", tags=["sources"], dependencies=[Depends(verify_api_key)])
 app.include_router(export.router, tags=["export"], dependencies=[Depends(verify_api_key)])
+app.include_router(digest.router, tags=["digest"], dependencies=[Depends(verify_api_key)])
+app.include_router(articles.router, prefix="/api", tags=["articles"], dependencies=[Depends(verify_api_key)])
 
 @app.get("/")
 async def root():
