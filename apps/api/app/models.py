@@ -30,6 +30,25 @@ class VECTOR(TypeDecorator):
             return value
         return None
 
+# SQLite için basit VECTOR type
+class SQLiteVECTOR(TypeDecorator):
+    impl = String
+    cache_ok = True
+    
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            if isinstance(value, list):
+                return json.dumps(value)
+            return value
+        return None
+    
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            if isinstance(value, str):
+                return json.loads(value)
+            return value
+        return None
+
 
 class Source(Base):
     __tablename__ = "sources"
@@ -73,7 +92,7 @@ class Embedding(Base):
     object_type = Column(String, nullable=False)  # 'source' or 'highlight'
     object_id = Column(Integer, nullable=False)
     model = Column(String, nullable=False)
-    vector = Column(VECTOR(384), nullable=False)
+    vector = Column(SQLiteVECTOR(), nullable=False)
     
     # Relationships
     source = relationship("Source", back_populates="embedding", foreign_keys=[object_id])
@@ -107,6 +126,24 @@ class RSSFeed(Base):
     category = Column(String)  # 'blog', 'news', 'research', etc.
 
 
+class RSSItem(Base):
+    __tablename__ = "rss_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    feed_id = Column(Integer, ForeignKey("rss_feeds.id"), nullable=False)
+    title = Column(String, nullable=False)
+    url = Column(String, unique=True, nullable=False)
+    content = Column(Text)
+    summary = Column(Text)
+    author = Column(String)
+    published_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    tags = Column(JSON)  # Store tags as JSON array
+    
+    # Relationships
+    feed = relationship("RSSFeed")
+
+
 class Article(Base):
     __tablename__ = "articles"
     
@@ -132,7 +169,7 @@ class ArticleEmbedding(Base):
     id = Column(Integer, primary_key=True, index=True)
     article_id = Column(Integer, ForeignKey("articles.id"), nullable=False)
     model = Column(String, nullable=False)
-    vector = Column(VECTOR(384), nullable=False)
+    vector = Column(SQLiteVECTOR(), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -167,15 +204,15 @@ class Export(Base):
     config_json = Column(Text)  # JSON string
 
 
-# Create indexes for better performance
-Index("idx_sources_title_gin", "title", postgresql_using="gin", postgresql_ops={"title": "gin_trgm_ops"})
-Index("idx_sources_raw_gin", "raw", postgresql_using="gin", postgresql_ops={"raw": "gin_trgm_ops"})
-Index("idx_highlights_text_gin", "text", postgresql_using="gin", postgresql_ops={"text": "gin_trgm_ops"})
-Index("idx_embeddings_vector", "vector", postgresql_using="ivfflat")
-Index("idx_reviews_next_review", "next_review_at")
-Index("idx_articles_published", "published_at")
-Index("idx_articles_title_gin", "title", postgresql_using="gin", postgresql_ops={"title": "gin_trgm_ops"})
-Index("idx_articles_content_gin", "content", postgresql_using="gin", postgresql_ops={"content": "gin_trgm_ops"})
-Index("idx_article_embeddings_vector", "vector", postgresql_using="ivfflat")
-Index("idx_review_sessions_highlight", "highlight_id")
-Index("idx_review_sessions_created", "created_at") 
+# Create indexes for better performance (PostgreSQL specific)
+# Index("idx_sources_title_gin", "title", postgresql_using="gin", postgresql_ops={"title": "gin_trgm_ops"})
+# Index("idx_sources_raw_gin", "raw", postgresql_using="gin", postgresql_ops={"raw": "gin_trgm_ops"})
+# Index("idx_highlights_text_gin", "text", postgresql_using="gin", postgresql_ops={"text": "gin_trgm_ops"})
+# Index("idx_embeddings_vector", "vector", postgresql_using="ivfflat")
+# Index("idx_reviews_next_review", "next_review_at")
+# Index("idx_articles_published", "published_at")
+# Index("idx_articles_title_gin", "title", postgresql_using="gin", postgresql_ops={"title": "gin_trgm_ops"})
+# Index("idx_articles_content_gin", "content", postgresql_using="gin", postgresql_ops={"content": "gin_trgm_ops"})
+# Index("idx_article_embeddings_vector", "vector", postgresql_using="ivfflat")
+# Index("idx_review_sessions_highlight", "highlight_id")
+# Index("idx_review_sessions_created", "created_at") 

@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  db-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: zgrwise_test
+      POSTGRES_USER: zgr
+      POSTGRES_PASSWORD: zgrpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./tools/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zgr -d zgrwise_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis-test:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api-test:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql+psycopg://zgr:zgrpass@db-test:5432/zgrwise_test
+      - REDIS_URL=redis://redis-test:6379/0
+      - API_KEY=test-key
+      - SECRET_KEY=test-secret-key
+      - GEMINI_API_KEY=test-gemini-key
+      - AI_MODEL=gemini-1.5-flash
+      - EMB_MODEL=BAAI/bge-small-en-v1.5
+      - EMB_DIM=384
+      - CORS_ALLOW_ORIGINS=http://localhost:3000
+    depends_on:
+      db-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+      "
+    volumes:
+      - ./apps/api:/app
+      - ./packages:/packages
+    working_dir: /app
+
+  worker-test:
+    build:
+      context: ./apps/worker
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql+psycopg://zgr:zgrpass@db-test:5432/zgrwise_test
+      - REDIS_URL=redis://redis-test:6379/0
+      - GEMINI_API_KEY=test-gemini-key
+      - AI_MODEL=gemini-1.5-flash
+      - EMB_MODEL=BAAI/bge-small-en-v1.5
+      - EMB_DIM=384
+    depends_on:
+      db-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    command: >
+      sh -c "
+        pytest tests/ -v --cov=worker --cov-report=xml --cov-report=html
+      "
+    volumes:
+      - ./apps/worker:/app
+      - ./packages:/packages
+    working_dir: /app
+
+  web-test:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=test
+      - NEXT_PUBLIC_API_URL=http://api-test:8000
+    command: >
+      sh -c "
+        npm ci &&
+        npm run lint &&
+        npm run build
+      "
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    working_dir: /app
+
+volumes:
+  postgres_test_data:

@@ -2,6 +2,8 @@
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
 
 # Python
 __pycache__/
@@ -115,3 +117,31 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Production files
+docker-compose.override.yml
+docker-compose.prod.yml
+nginx.conf
+ssl/
+
+# Backup files
+backups/
+*.backup
+*.sql.gz
+
+# Security reports
+bandit-report.json
+safety-report.json
+
+# Next.js build files
+apps/web/.next/
+apps/web/out/
+
+# Test databases
+test.db
+test_worker.db
+*.test.db
+
+# IDE specific
+.vscode/settings.json
+.idea/workspace.xml

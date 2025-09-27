@@ -138,8 +138,7 @@ class HealthResponse(BaseModel):
     status: str
     db: str
     redis: str
-    ollama: str
-    embeddings_model: str
+    timestamp: Optional[float] = None
 
 
 class IngestWebRequest(BaseModel):
