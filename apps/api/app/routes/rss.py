@@ -87,7 +87,7 @@ async def get_articles(
 
 
 async def process_rss_feed(feed_id: int):
-    """Process RSS feed and extract articles"""
-    # This would run in background
-    # Implementation in worker service
+    """Placeholder for RSS feed processing - actual implementation in worker service"""
+    # This function is a placeholder and does nothing
+    # Real RSS processing is handled by the worker service
     pass 

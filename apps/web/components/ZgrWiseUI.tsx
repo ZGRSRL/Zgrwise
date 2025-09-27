@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import {
   Inbox,
@@ -216,10 +218,91 @@ function ReviewCard({ title, excerpt, dueToday, difficulty, nextIn }: { title: s
   );
 }
 
-// === RSS List ===
-function RSSRow({ name, url, unread, last }: { name: string; url: string; unread?: number; last?: string }) {
+// === RSS Add Form ===
+function RSSAddForm({ onAdd }: { onAdd: (name: string, url: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [url, setUrl] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name && url) {
+      onAdd(name, url);
+      setName("");
+      setUrl("");
+      setIsOpen(false);
+    }
+  };
+
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => setIsOpen(true)}
+        className="w-full p-4 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors text-zinc-600 dark:text-zinc-400"
+      >
+        <div className="flex items-center justify-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <span className="text-blue-600 dark:text-blue-400 text-lg">+</span>
+          </div>
+          <span className="font-medium">Add RSS Feed</span>
+        </div>
+      </button>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/40 hover:shadow-sm transition">
+    <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/50">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            Feed Name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g., TechCrunch"
+            className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+            RSS URL
+          </label>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://example.com/rss"
+            className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            Add Feed
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// === RSS List ===
+function RSSRow({ name, url, unread, last, onDelete }: { name: string; url: string; unread?: number; last?: string; onDelete?: () => void }) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/40 hover:shadow-sm transition group">
       <div className="flex items-center gap-3">
         <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 grid place-items-center text-white text-sm font-semibold">
           {name.slice(0, 1).toUpperCase()}
@@ -234,6 +317,15 @@ function RSSRow({ name, url, unread, last }: { name: string; url: string; unread
           <Badge className="bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 ring-emerald-300/40">{unread} unread</Badge>
         )}
         <div className="text-xs text-zinc-500">{last}</div>
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-all"
+            title="Delete feed"
+          >
+            <span className="text-sm">×</span>
+          </button>
+        )}
         <ChevronRight className="h-4 w-4 text-zinc-400" />
       </div>
     </div>
@@ -369,11 +461,40 @@ function ReviewPanel() {
 }
 
 function RSSPanel() {
+  const [feeds, setFeeds] = useState([
+    { id: 1, name: "Sebastian Raschka", url: "https://magazine.sebastianraschka.com/rss", unread: 5, last: "2h ago" },
+    { id: 2, name: "ACM Queue", url: "https://queue.acm.org/rss/feeds/queuecontent.xml", unread: 1, last: "8h ago" },
+    { id: 3, name: "arXiv AI", url: "https://arxiv.org/rss/cs.AI", unread: 12, last: "1d ago" }
+  ]);
+
+  const handleAddFeed = (name: string, url: string) => {
+    const newFeed = {
+      id: Date.now(),
+      name,
+      url,
+      unread: 0,
+      last: "Just added"
+    };
+    setFeeds([...feeds, newFeed]);
+  };
+
+  const handleDeleteFeed = (id: number) => {
+    setFeeds(feeds.filter(feed => feed.id !== id));
+  };
+
   return (
     <div className="flex flex-col gap-3">
-      <RSSRow name="Sebastian Raschka" url="https://magazine.sebastianraschka.com/rss" unread={5} last="2h ago" />
-      <RSSRow name="ACM Queue" url="https://queue.acm.org/rss/feeds/queuecontent.xml" unread={1} last="8h ago" />
-      <RSSRow name="arXiv AI" url="https://arxiv.org/rss/cs.AI" unread={12} last="1d ago" />
+      <RSSAddForm onAdd={handleAddFeed} />
+      {feeds.map(feed => (
+        <RSSRow
+          key={feed.id}
+          name={feed.name}
+          url={feed.url}
+          unread={feed.unread}
+          last={feed.last}
+          onDelete={() => handleDeleteFeed(feed.id)}
+        />
+      ))}
     </div>
   );
 }

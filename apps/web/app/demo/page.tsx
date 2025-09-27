@@ -1,5 +1,5 @@
 import ZgrWiseUI from "@/components/ZgrWiseUI";
 
-export default function DemoPage() {
+export default function Page() {
   return <ZgrWiseUI />;
 }
