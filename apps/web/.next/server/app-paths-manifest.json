@@ -1,7 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/rss/page": "app/rss/page.js",
-  "/analytics/page": "app/analytics/page.js",
-  "/search/page": "app/search/page.js",
-  "/settings/page": "app/settings/page.js"
-}

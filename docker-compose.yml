@@ -28,10 +28,12 @@ services:
     build: ./apps/api
     environment:
       - PYTHONPATH=/app
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - OLLAMA_BASE=${OLLAMA_BASE}
-      - API_KEY=${API_KEY}
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg://zgr:zgrpass@db:5432/zgrwise}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - OLLAMA_BASE=${OLLAMA_BASE:-}
+      - API_KEY=${API_KEY:-devkey}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-temp-key}
+      - SECRET_KEY=${SECRET_KEY:-default-secret-key}
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -45,10 +47,11 @@ services:
     command: python -m worker.main
     depends_on: [api, redis, db]
     environment:
-      - PYTHONPATH=/app
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - OLLAMA_BASE=${OLLAMA_BASE}
+      - PYTHONPATH=/worker
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg://zgr:zgrpass@db:5432/zgrwise}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - OLLAMA_BASE=${OLLAMA_BASE:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-temp-key}
     volumes:
       - ./apps/worker:/worker
       - ./data/exports:/data/exports
@@ -57,24 +60,28 @@ services:
     build: ./apps/web
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=development
     depends_on:
       api: { condition: service_started }
     ports: ["3000:3000"]
     volumes:
       - ./apps/web:/app
+      - node_modules_cache:/app/node_modules
 
   scheduler:
     build: ./apps/worker
     command: python -m worker.scheduler
     depends_on: [api, worker, redis, db]
     environment:
-      - PYTHONPATH=/app
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - OLLAMA_BASE=${OLLAMA_BASE}
+      - PYTHONPATH=/worker
+      - DATABASE_URL=${DATABASE_URL:-postgresql+psycopg://zgr:zgrpass@db:5432/zgrwise}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - OLLAMA_BASE=${OLLAMA_BASE:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-temp-key}
     volumes:
       - ./apps/worker:/worker
 
 volumes:
   db_data:
-  exports: 
+  exports:
+  node_modules_cache: 

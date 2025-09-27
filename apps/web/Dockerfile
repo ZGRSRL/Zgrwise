@@ -39,11 +39,21 @@ RUN chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Copy package.json for standalone mode
+# Copy package.json and node_modules for development
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Copy source files for development mode
+COPY --from=builder --chown=nextjs:nodejs /app/app ./app
+COPY --from=builder --chown=nextjs:nodejs /app/components ./components
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./next.config.js
+COPY --from=builder --chown=nextjs:nodejs /app/tailwind.config.js ./tailwind.config.js
+COPY --from=builder --chown=nextjs:nodejs /app/postcss.config.js ./postcss.config.js
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 
 USER nextjs
 
@@ -52,4 +62,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"] 
+CMD ["npm", "run", "dev"] 

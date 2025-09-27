@@ -69,7 +69,7 @@ export default function FeedItem({ type, title, excerpt, source, timeAgo, scoreT
               {scoreTag}
             </span>
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+          <p className="text-sm text-gray-600 line-clamp-2 mb-3 break-words">
             {excerpt}
           </p>
           <div className="flex items-center justify-between text-xs text-gray-500">
