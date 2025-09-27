@@ -1,0 +1,178 @@
+[1mdiff --git a/create_tables.sql b/create_tables.sql[m
+[1mindex 955a97c..e38f270 100644[m
+[1m--- a/create_tables.sql[m
+[1m+++ b/create_tables.sql[m
+[36m@@ -23,7 +23,9 @@[m [mCREATE TABLE IF NOT EXISTS highlights ([m
+     id SERIAL PRIMARY KEY,[m
+     source_id INTEGER REFERENCES sources(id) ON DELETE CASCADE,[m
+     text TEXT NOT NULL,[m
+[31m-    context TEXT,[m
+[32m+[m[32m    note TEXT, -- Changed from context to note to match SQLAlchemy model[m
+[32m+[m[32m    location VARCHAR, -- Added to match SQLAlchemy model[m
+[32m+[m[32m    color VARCHAR, -- Added to match SQLAlchemy model[m
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,[m
+     tags JSONB DEFAULT '[]'::jsonb,[m
+     summary TEXT,[m
+[36m@@ -38,10 +40,10 @@[m [mCREATE TABLE IF NOT EXISTS highlights ([m
+ -- Embeddings table[m
+ CREATE TABLE IF NOT EXISTS embeddings ([m
+     id SERIAL PRIMARY KEY,[m
+[31m-    source_id INTEGER REFERENCES sources(id) ON DELETE CASCADE,[m
+[31m-    highlight_id INTEGER REFERENCES highlights(id) ON DELETE CASCADE,[m
+[31m-    embedding VECTOR(384),[m
+[32m+[m[32m    object_type VARCHAR(20) NOT NULL, -- 'source' or 'highlight' to match SQLAlchemy model[m
+[32m+[m[32m    object_id INTEGER NOT NULL, -- References either source_id or highlight_id[m
+     model VARCHAR(50) DEFAULT 'BAAI/bge-small-en-v1.5',[m
+[32m+[m[32m    vector VECTOR(384), -- Changed from embedding to vector to match SQLAlchemy model[m
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP[m
+ );[m
+ [m
+[36m@@ -51,8 +53,10 @@[m [mCREATE TABLE IF NOT EXISTS rss_feeds ([m
+     url VARCHAR NOT NULL UNIQUE,[m
+     title VARCHAR NOT NULL,[m
+     description TEXT,[m
+[31m-    last_fetched TIMESTAMP,[m
+[32m+[m[32m    last_checked TIMESTAMP, -- Changed from last_fetched to last_checked to match SQLAlchemy model[m
+     is_active BOOLEAN DEFAULT true,[m
+[32m+[m[32m    category VARCHAR, -- Added to match SQLAlchemy model[m
+[32m+[m[32m    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Added to match SQLAlchemy model[m
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,[m
+     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP[m
+ );[m
+[36m@@ -62,10 +66,13 @@[m [mCREATE TABLE IF NOT EXISTS rss_items ([m
+     id SERIAL PRIMARY KEY,[m
+     feed_id INTEGER REFERENCES rss_feeds(id) ON DELETE CASCADE,[m
+     title VARCHAR NOT NULL,[m
+[31m-    link VARCHAR NOT NULL,[m
+[31m-    description TEXT,[m
+[32m+[m[32m    url VARCHAR NOT NULL UNIQUE, -- Changed from link to url to match SQLAlchemy model[m
+[32m+[m[32m    content TEXT, -- Added to match SQLAlchemy model[m
+[32m+[m[32m    summary TEXT, -- Added to match SQLAlchemy model[m
+[32m+[m[32m    author VARCHAR, -- Added to match SQLAlchemy model[m
+     published_at TIMESTAMP,[m
+     guid VARCHAR,[m
+[32m+[m[32m    tags JSONB DEFAULT '[]'::jsonb, -- Added to match SQLAlchemy model[m
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,[m
+     UNIQUE(feed_id, guid)[m
+ );[m
+[36m@@ -76,9 +83,9 @@[m [mCREATE INDEX IF NOT EXISTS idx_sources_created_at ON sources(created_at);[m
+ CREATE INDEX IF NOT EXISTS idx_highlights_source_id ON highlights(source_id);[m
+ CREATE INDEX IF NOT EXISTS idx_highlights_next_review ON highlights(next_review);[m
+ CREATE INDEX IF NOT EXISTS idx_highlights_tags ON highlights USING GIN(tags);[m
+[31m-CREATE INDEX IF NOT EXISTS idx_embeddings_source_id ON embeddings(source_id);[m
+[31m-CREATE INDEX IF NOT EXISTS idx_embeddings_highlight_id ON embeddings(highlight_id);[m
+[31m-CREATE INDEX IF NOT EXISTS idx_embeddings_vector ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_embeddings_object_type ON embeddings(object_type);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_embeddings_object_id ON embeddings(object_id);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_embeddings_vector ON embeddings USING ivfflat (vector vector_cosine_ops) WITH (lists = 100);[m
+ CREATE INDEX IF NOT EXISTS idx_rss_feeds_url ON rss_feeds(url);[m
+ CREATE INDEX IF NOT EXISTS idx_rss_feeds_active ON rss_feeds(is_active);[m
+ CREATE INDEX IF NOT EXISTS idx_rss_items_feed_id ON rss_items(feed_id);[m
+[36m@@ -87,7 +94,7 @@[m [mCREATE INDEX IF NOT EXISTS idx_rss_items_published_at ON rss_items(published_at)[m
+ -- Create full-text search indexes[m
+ CREATE INDEX IF NOT EXISTS idx_sources_title_gin ON sources USING GIN(to_tsvector('english', title));[m
+ CREATE INDEX IF NOT EXISTS idx_highlights_text_gin ON highlights USING GIN(to_tsvector('english', text));[m
+[31m-CREATE INDEX IF NOT EXISTS idx_highlights_context_gin ON highlights USING GIN(to_tsvector('english', context));[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_highlights_note_gin ON highlights USING GIN(to_tsvector('english', note));[m
+ [m
+ -- Insert some sample data[m
+ INSERT INTO sources (type, url, origin, title, author, summary) VALUES [m
+[36m@@ -95,7 +102,7 @@[m [mINSERT INTO sources (type, url, origin, title, author, summary) VALUES[m
+ ('web', 'https://example.com/article2', 'Example Site', 'Sample Article 2', 'Jane Smith', 'Another sample article about learning techniques.')[m
+ ON CONFLICT DO NOTHING;[m
+ [m
+[31m-INSERT INTO highlights (source_id, text, context, tags, summary, importance, difficulty) VALUES [m
+[32m+[m[32mINSERT INTO highlights (source_id, text, note, tags, summary, importance, difficulty) VALUES[m[41m [m
+ (1, 'Knowledge management is essential for personal growth.', 'In the introduction section', '["learning", "growth"]', 'Key insight about knowledge management', 3, 2),[m
+ (1, 'Spaced repetition helps with long-term retention.', 'In the methodology section', '["learning", "memory"]', 'Important learning technique', 4, 3),[m
+ (2, 'Active recall is more effective than passive reading.', 'In the research findings', '["learning", "study"]', 'Research-backed learning method', 5, 2)[m
+[36m@@ -110,6 +117,89 @@[m [mBEGIN[m
+ END;[m
+ $$ language 'plpgsql';[m
+ [m
+[32m+[m[32m-- Reviews table (for spaced repetition)[m
+[32m+[m[32mCREATE TABLE IF NOT EXISTS reviews ([m
+[32m+[m[32m    id SERIAL PRIMARY KEY,[m
+[32m+[m[32m    highlight_id INTEGER REFERENCES highlights(id) ON DELETE CASCADE,[m
+[32m+[m[32m    next_review_at TIMESTAMP NOT NULL,[m
+[32m+[m[32m    interval_days INTEGER DEFAULT 1,[m
+[32m+[m[32m    ease_factor FLOAT DEFAULT 2.5,[m
+[32m+[m[32m    reps INTEGER DEFAULT 0,[m
+[32m+[m[32m    last_result INTEGER, -- 0-5 rating[m
+[32m+[m[32m    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,[m
+[32m+[m[32m    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP[m
+[32m+[m[32m);[m
+[32m+[m
+[32m+[m[32m-- Articles table (for RSS items with full content)[m
+[32m+[m[32mCREATE TABLE IF NOT EXISTS articles ([m
+[32m+[m[32m    id SERIAL PRIMARY KEY,[m
+[32m+[m[32m    feed_id INTEGER REFERENCES rss_feeds(id) ON DELETE CASCADE,[m
+[32m+[m[32m    title VARCHAR NOT NULL,[m
+[32m+[m[32m    url VARCHAR NOT NULL UNIQUE,[m
+[32m+[m[32m    content TEXT,[m
+[32m+[m[32m    summary TEXT,[m
+[32m+[m[32m    author VARCHAR,[m
+[32m+[m[32m    published_at TIMESTAMP,[m
+[32m+[m[32m    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,[m
+[32m+[m[32m    tags JSONB DEFAULT '[]'::jsonb[m
+[32m+[m[32m);[m
+[32m+[m
+[32m+[m[32m-- Article embeddings table[m
+[32m+[m[32mCREATE TABLE IF NOT EXISTS article_embeddings ([m
+[32m+[m[32m    id SERIAL PRIMARY KEY,[m
+[32m+[m[32m    article_id INTEGER REFERENCES articles(id) ON DELETE CASCADE,[m
+[32m+[m[32m    model VARCHAR(50) DEFAULT 'BAAI/bge-small-en-v1.5',[m
+[32m+[m[32m    vector VECTOR(384),[m
+[32m+[m[32m    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP[m
+[32m+[m[32m);[m
+[32m+[m
+[32m+[m[32m-- Review sessions table (for tracking review performance)[m
+[32m+[m[32mCREATE TABLE IF NOT EXISTS review_sessions ([m
+[32m+[m[32m    id SERIAL PRIMARY KEY,[m
+[32m+[m[32m    highlight_id INTEGER REFERENCES highlights(id) ON DELETE CASCADE,[m
+[32m+[m[32m    session_type VARCHAR(20) NOT NULL, -- 'quiz', 'flashcard', 'qa'[m
+[32m+[m[32m    question TEXT,[m
+[32m+[m[32m    user_answer TEXT,[m
+[32m+[m[32m    correct_answer TEXT,[m
+[32m+[m[32m    is_correct BOOLEAN,[m
+[32m+[m[32m    difficulty_rating INTEGER, -- 1-5[m
+[32m+[m[32m    time_spent INTEGER, -- seconds[m
+[32m+[m[32m    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP[m
+[32m+[m[32m);[m
+[32m+[m
+[32m+[m[32m-- Exports table (for tracking export jobs)[m
+[32m+[m[32mCREATE TABLE IF NOT EXISTS exports ([m
+[32m+[m[32m    id SERIAL PRIMARY KEY,[m
+[32m+[m[32m    target VARCHAR(50) NOT NULL, -- 'obsidian', 'notion', etc.[m
+[32m+[m[32m    status VARCHAR(20) NOT NULL, -- 'pending', 'running', 'completed', 'failed'[m
+[32m+[m[32m    last_run_at TIMESTAMP,[m
+[32m+[m[32m    config_json TEXT, -- JSON configuration[m
+[32m+[m[32m    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,[m
+[32m+[m[32m    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP[m
+[32m+[m[32m);[m
+[32m+[m
+[32m+[m[32m-- Create additional indexes for new tables[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_reviews_highlight_id ON reviews(highlight_id);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_reviews_next_review_at ON reviews(next_review_at);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_articles_feed_id ON articles(feed_id);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_articles_url ON articles(url);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_articles_title_gin ON articles USING GIN(to_tsvector('english', title));[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_articles_content_gin ON articles USING GIN(to_tsvector('english', content));[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_article_embeddings_article_id ON article_embeddings(article_id);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_article_embeddings_vector ON article_embeddings USING ivfflat (vector vector_cosine_ops) WITH (lists = 100);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_review_sessions_highlight_id ON review_sessions(highlight_id);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_review_sessions_created_at ON review_sessions(created_at);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_exports_target ON exports(target);[m
+[32m+[m[32mCREATE INDEX IF NOT EXISTS idx_exports_status ON exports(status);[m
+[32m+[m
+[32m+[m[32m-- Create triggers for updated_at columns[m
+[32m+[m[32mCREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews[m
+[32m+[m[32m    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();[m
+[32m+[m
+[32m+[m[32mCREATE TRIGGER update_exports_updated_at BEFORE UPDATE ON exports[m
+[32m+[m[32m    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();[m
+[32m+[m
+ -- Create trigger for rss_feeds[m
+ CREATE TRIGGER update_rss_feeds_updated_at BEFORE UPDATE ON rss_feeds[m
+     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();[m

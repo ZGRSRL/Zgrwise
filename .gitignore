@@ -145,3 +145,6 @@ test_worker.db
 # IDE specific
 .vscode/settings.json
 .idea/workspace.xml
+# Local helper artifacts
+migration_update_tables.sql
+'e restart web'

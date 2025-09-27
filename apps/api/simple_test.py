@@ -29,7 +29,6 @@ app.add_middleware(
 class HealthResponse(BaseModel):
     status: str
     timestamp: float
-
 class RSSFeed(BaseModel):
     id: int
     title: str
