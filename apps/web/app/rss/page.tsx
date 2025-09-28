@@ -35,7 +35,7 @@ export default function RSSPage() {
 
   const fetchFeeds = async () => {
     try {
-      const response = await fetch('/api/rss/feeds')
+      const response = await fetch('http://localhost:8000/api/rss/feeds')
       if (response.ok) {
         const data = await response.json()
         setFeeds(data)
@@ -47,7 +47,7 @@ export default function RSSPage() {
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch('/api/rss/items')
+      const response = await fetch('http://localhost:8000/api/rss/items')
       if (response.ok) {
         const data = await response.json()
         setArticles(data)
@@ -62,7 +62,7 @@ export default function RSSPage() {
     setLoading(true)
     
     try {
-      const response = await fetch('/api/rss/feeds', {
+      const response = await fetch('http://localhost:8000/api/rss/feeds', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -83,7 +83,7 @@ export default function RSSPage() {
 
   const refreshFeed = async (feedId: number) => {
     try {
-      await fetch(`/api/rss/refresh/${feedId}`, {
+      await fetch(`http://localhost:8000/api/rss/refresh/${feedId}`, {
         method: 'POST'
       })
       fetchArticles()
@@ -100,7 +100,7 @@ export default function RSSPage() {
       </div>
 
       {/* Add New Feed Form */}
-      <div className="card mb-8">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Add New RSS Feed</h2>
         <form onSubmit={addFeed} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -135,7 +135,7 @@ export default function RSSPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary flex items-center gap-2"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             {loading ? 'Adding...' : 'Add Feed'}
@@ -144,13 +144,13 @@ export default function RSSPage() {
       </div>
 
       {/* RSS Feeds List */}
-      <div className="card mb-8">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">Your RSS Feeds</h2>
         <div className="space-y-4">
           {feeds.map((feed) => (
             <div key={feed.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center gap-3">
-                <Rss className="w-5 h-5 text-primary-600" />
+                <Rss className="w-5 h-5 text-blue-600" />
                 <div>
                   <h3 className="font-medium">{feed.title}</h3>
                   <p className="text-sm text-gray-600">{feed.url}</p>
@@ -162,12 +162,12 @@ export default function RSSPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => refreshFeed(feed.id)}
-                  className="btn btn-secondary flex items-center gap-2"
+                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 flex items-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Refresh
                 </button>
-                <button className="btn btn-secondary text-red-600 hover:bg-red-50">
+                <button className="bg-gray-100 text-red-600 px-3 py-2 rounded-md hover:bg-red-50">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -177,13 +177,13 @@ export default function RSSPage() {
       </div>
 
       {/* Latest Articles */}
-      <div className="card">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-semibold mb-4">Latest Articles</h2>
         <div className="space-y-4">
           {articles.map((article) => (
             <div key={article.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
               <h3 className="font-medium mb-2">
-                <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
+                <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                   {article.title}
                 </a>
               </h3>

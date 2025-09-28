@@ -123,6 +123,59 @@ async def add_feed(feed: RSSFeed):
     sample_feeds.append(feed)
     return {"message": "Feed added successfully", "feed": feed}
 
+@app.post("/api/rss/feeds/{feed_id}/fetch")
+async def fetch_feed_items(feed_id: int):
+    """RSS feed'inden gerçek haberleri çek"""
+    import feedparser
+    from datetime import datetime
+    
+    # Feed'i bul
+    feed = next((f for f in sample_feeds if f.id == feed_id), None)
+    if not feed:
+        raise HTTPException(status_code=404, detail="Feed not found")
+    
+    try:
+        # RSS feed'ini parse et
+        parsed_feed = feedparser.parse(feed.url)
+        
+        if parsed_feed.bozo:
+            raise HTTPException(status_code=400, detail=f"Feed parse error: {parsed_feed.bozo_exception}")
+        
+        # Yeni item'ları ekle
+        new_items = []
+        for entry in parsed_feed.entries[:10]:  # İlk 10 makale
+            new_id = max([item.id for item in sample_items], default=0) + len(new_items) + 1
+            
+            # Tarih formatını düzenle
+            published_at = None
+            if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                published_at = datetime(*entry.published_parsed[:6]).isoformat() + "Z"
+            
+            new_item = RSSItem(
+                id=new_id,
+                feed_id=feed_id,
+                title=entry.get('title', 'No title'),
+                url=entry.get('link', ''),
+                content=entry.get('summary', ''),
+                published_at=published_at
+            )
+            sample_items.append(new_item)
+            new_items.append(new_item)
+        
+        return {
+            "message": f"Fetched {len(new_items)} items from {feed.title}",
+            "items": new_items,
+            "feed_title": feed.title
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching feed: {str(e)}")
+
+@app.post("/api/rss/refresh/{feed_id}")
+async def refresh_feed(feed_id: int):
+    """RSS feed'ini yenile (fetch ile aynı)"""
+    return await fetch_feed_items(feed_id)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

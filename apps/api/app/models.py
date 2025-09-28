@@ -123,7 +123,10 @@ class RSSFeed(Base):
     added_at = Column(DateTime, default=datetime.utcnow)
     last_checked = Column(DateTime)
     is_active = Column(Boolean, default=True)
+    active = Column(Boolean, default=True)  # Alias for worker compatibility
     category = Column(String)  # 'blog', 'news', 'research', etc.
+    etag = Column(String)  # For cache headers
+    last_modified = Column(String)  # For cache headers
 
 
 class RSSItem(Base):
@@ -133,12 +136,18 @@ class RSSItem(Base):
     feed_id = Column(Integer, ForeignKey("rss_feeds.id"), nullable=False)
     title = Column(String, nullable=False)
     url = Column(String, unique=True, nullable=False)
+    link = Column(String)  # Alias for worker compatibility
     content = Column(Text)
+    content_text = Column(Text)  # For worker compatibility
     summary = Column(Text)
+    summary_html = Column(Text)  # For worker compatibility
     author = Column(String)
     published_at = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
     tags = Column(JSON)  # Store tags as JSON array
+    guid = Column(String)  # For worker compatibility
+    guid_hash = Column(String)  # For worker compatibility
+    status = Column(String, default="pending")  # For worker compatibility
     
     # Relationships
     feed = relationship("RSSFeed")
